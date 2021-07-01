@@ -1,0 +1,118 @@
+- hosts: Name_Node
+  vars_prompt:
+          - name: name_ip
+            prompt: "Please enter name node Ip"
+            private: no
+  tasks:
+    - name: "copying hadoop software to NameNode"
+      copy: 
+        src: "/root/hadoop-1.2.1-1.x86_64.rpm"
+        dest: "/root"
+    - name: "copying jdk software NameNode"
+      copy:
+        src: "/root/jdk-8u171-linux-x64.rpm"
+        dest: "/root"
+    - name: "installing hadoop software"
+      command: "rpm -ivh /root/hadoop-1.2.1-1.x86_64.rpm --force"
+      register: hadoop_install
+    - debug:
+            var: hadoop_install
+    
+    - name: "Installing jdk at NameNode"
+      command: "rpm -ivh /root/jdk-8u171-linux-x64.rpm"
+      ignore_errors: yes
+      register: jdk_install
+
+    - debug:
+            var: jdk_install
+   
+    - name: "creating directory for NameNode"
+      file:
+              path: "/name111"
+              state: "directory"
+    - name: "hdfs-site.xml configuration"
+      blockinfile:
+              path: "/etc/hadoop/hdfs-site.xml"
+              insertafter: "<configuration"
+              block:
+                     <property>
+                     <name>dfs.name.dir</name>
+                     <value>/name111</value>
+                     </property>
+             
+    - name: "core-site.xml configuration"
+      blockinfile:
+              path: "/etc/hadoop/core-site.xml"
+              insertafter: "<configuration>"
+              block: 
+                      <property>
+                      <name>fs.default.name</name>
+                      <value>hdfs://{{ name_ip }}:9001</value>
+                      </property>
+              
+
+    - name: "formatting name node"
+      command: "echo Y | hadoop namenode -format"
+      register: formate_output
+      ignore_errors: yes
+    - debug:
+            var: formate_output
+    - name: "starting service of namenode"
+      command: "hadoop-daemon.sh start namenode"
+      ignore_errors: yes
+
+- hosts: Data_Node
+  vars_prompt:
+          - name: name_ip
+            prompt: "Please enter name node Ip"
+            private: no
+
+  tasks:
+    - name: "copying hadoop software to DataNode"
+      copy:
+        src: "/root/hadoop-1.2.1-1.x86_64.rpm"
+        dest: "/root"
+    - name: "copying jdk software DataNode"
+      copy:
+        src: "/root/jdk-8u171-linux-x64.rpm"
+        dest: "/root"
+    - name: "installing hadoop software"
+      command: "rpm -ivh /root/hadoop-1.2.1-1.x86_64.rpm --force"
+      register: hadoop_installed
+    - debug:
+            var: hadoop_installed
+
+    - name: "Installing jdk "
+      command: "rpm -ivh /root/jdk-8u171-linux-x64.rpm"
+      ignore_errors: yes
+      register: jdk_install
+    - debug:
+            var: jd_install
+    - name: "creating directory at datanode"
+      file:
+          path: "/data11"
+          state: directory
+    - name: "hdfs-site.xml configuration"
+      blockinfile:
+              path: "/etc/hadoop/hdfs-site.xml"
+              insertafter: "<configuration"
+              block:
+                     <property>
+                     <name>dfs.data.dir</name>
+                     <value>/data11</value>
+                     </property>
+              
+    - name: "core-site.xml configuration"
+      blockinfile:
+              path: "/etc/hadoop/core-site.xml"
+              insertafter: "<configuration>"
+              block:
+                      <property>
+                      <name>fs.default.name</name>
+                      <value>hdfs://{{ name_ip }}:9001</value>
+                      </property>
+
+             
+    - name: "starting data node service"
+      command: "hadoop-daemon.sh start datanode"
+      ignore_errors: yes
