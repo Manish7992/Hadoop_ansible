@@ -1,4 +1,4 @@
-- hosts: Name_Node
+- hosts: tag_name_Name_Node
   vars_prompt:
           - name: name_ip
             prompt: "Please enter name node Ip"
@@ -61,7 +61,7 @@
       command: "hadoop-daemon.sh start namenode"
       ignore_errors: yes
 
-- hosts: Data_Node
+- hosts: tag_name_Data_Node
   vars_prompt:
           - name: name_ip
             prompt: "Please enter name node Ip"
